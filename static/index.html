@@ -53,33 +53,28 @@
             #map {
                 height: 400px;
             }
-            
         }
     </style>
 </head>
 <body>
     <h1>Golf GTI - Location History</h1>
+    <p id="last_updated"></p>
     <p id="auth_url"></p>
-    <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
+    <div id="map"></div>
     <form id="auth-form">
-        <label for="auth_code" style="display: none;">Enter Authorization Code:</label>
-        <input type="text" id="auth_code" name="auth_code" placeholder="Authorization Code" required>
+        <label for="auth_code">Enter Authorization Code:</label>
+        <input type="text" id="auth_code" name="auth_code" required>
         <button type="submit">Submit</button>
     </form>
-    <div id="map"></div>
-    <p id="last_updated"></p>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2); // Default view, will be updated with the newest location
-
         // Add a tile layer to the map
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
-
         var markers = [];
-
         // Function to fetch and update location data
         function updateLocationData() {
             fetch('/location.json')
@@ -88,7 +83,6 @@
                     // Remove existing markers
                     markers.forEach(marker => map.removeLayer(marker));
                     markers = [];
-
                     // Add new markers and focus on the newest location
                     let newestLocation = data[data.length - 1];
                     data.forEach(location => {
@@ -99,7 +93,6 @@
                             .bindPopup(`Latitude: ${location.latitude}<br>Longitude: ${location.longitude}<br>Data Age: ${lastUpdated}`);
                         markers.push(marker);
                     });
-
                     // Focus the map on the newest location
                     if (newestLocation) {
                         map.setView([newestLocation.latitude, newestLocation.longitude], 13);
@@ -107,16 +100,12 @@
                 })
                 .catch(error => console.error('Error fetching location data:', error));
         }
-
         // Initial load of location data
         updateLocationData();
-
         // Update location data every 15 minutes
         setInterval(updateLocationData, 900000); // 900000 ms = 15 minutes
-
         // Reload the page every 5 minutes to prevent the browser from caching the location data
         setInterval(() => location.reload(), 300000); // 300000 ms = 5 minutes
-
         // Fetch and display the auth_url
         fetch('/auth_url')
             .then(response => response.json())
@@ -124,7 +113,6 @@
                 document.getElementById('auth_url').innerHTML = `<a href="${data.auth_url}" target="_blank" class="button">Authenticate</a>`;
             })
             .catch(error => console.error('Error fetching auth_url:', error));
-
         // Handle form submission
         document.getElementById('auth-form').addEventListener('submit', function(event) {
             event.preventDefault();

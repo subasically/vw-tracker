@@ -5,6 +5,8 @@ services:
       - "8123:8000"
     env_file:
       - .env
+    environment:
+      - PORT=8000
     volumes:
       - ./static:/app/static
     command: ["python", "app.py"]

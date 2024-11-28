@@ -12,6 +12,7 @@ load_dotenv()
 
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
+port = int(os.getenv('PORT', 8000))  # Default to 8000 if PORT is not set
 
 client = smartcar.AuthClient(client_id, client_secret, 'http://localhost/smartcar/redirect/', 'live')
 
@@ -36,19 +37,13 @@ def submit_auth_code():
         return jsonify({'success': False, 'message': 'Authorization code not provided.'}), 400
 
     try:
-        # Exchange the authorization code for access tokens
         new_access = client.exchange_code(auth_code)
-
-        # Save the tokens to a file
         with open('tokens.txt', 'wb') as file:
             pickle.dump(new_access, file)
-
-        # Run get_vw_location.py to start fetching location data
         subprocess.Popen(["python", "get_vw_location.py"])
-
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=port)
