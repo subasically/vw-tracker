@@ -48,4 +48,4 @@ def submit_auth_code():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host=host, port=port)
+    app.run(host='0.0.0.0', port=port)
