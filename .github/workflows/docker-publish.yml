@@ -1,0 +1,69 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Create cache directory
+        run: mkdir -p /tmp/.buildx-cache
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Log in to GitHub Packages
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/vw-tracker
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/vw-tracker:latest
+            ghcr.io/${{ github.repository_owner }}/vw-tracker:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/vw-tracker:${{ github.ref_name }}
+          platforms: linux/amd64
+
+      - name: Push git tag
+        if: github.event_name == 'release'
+        run: git push origin ${{ github.ref }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Build failed. Check the logs."
