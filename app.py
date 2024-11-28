@@ -1,6 +1,7 @@
 import os
 import subprocess
 import pickle
+import logging
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 import smartcar
@@ -17,12 +18,16 @@ scopes = os.getenv('SCOPES', 'read_vehicle_info,read_location,read_odometer').sp
 
 client = smartcar.AuthClient(client_id, client_secret, 'http://localhost/smartcar/redirect/', 'live')
 
+logging.basicConfig(level=logging.DEBUG)
+
 @app.route('/')
 def index():
+    app.logger.debug('Serving index.html')
     return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/location.json')
 def location_json():
+    app.logger.debug('Serving location.json')
     return send_from_directory(app.static_folder, 'location.json')
 
 @app.route('/auth_url', methods=['GET'])
