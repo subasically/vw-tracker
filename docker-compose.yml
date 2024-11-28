@@ -1,9 +1,8 @@
 services:
   vw-tracker:
-    image: ghcr.io/subasically/vw-tracker:latest
-    container_name: vw-tracker
+    build: .
     ports:
-      - "8000:8000"
+      - "8123:8000"
     env_file:
       - .env
     volumes:
