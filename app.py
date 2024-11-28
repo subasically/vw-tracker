@@ -12,7 +12,7 @@ load_dotenv()
 
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
-port = int(os.getenv('PORT', 8000))  # Default to 8000 if PORT is not set
+port = int(os.getenv('PORT', 8123))  # Default to 8123 if PORT is not set
 host = os.getenv('HOST', 'localhost') # Default to localhost if HOST is not set
 scopes = os.getenv('SCOPES', 'read_vehicle_info,read_location,read_odometer').split(',')
 

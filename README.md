@@ -30,10 +30,10 @@ Simple scripts for getting car status from Smartcar.com. This project uses Flask
 
    ```sh
    docker build -t vw-tracker .
-   docker run -p 8000:8000 --env-file .env vw-tracker
+   docker run -p 8123:8123 --env-file .env vw-tracker
    ```
 
-4. **Access the web interface: Open your web browser and go to `http://localhost:8000` to access the web interface.**
+4. **Access the web interface: Open your web browser and go to `http://localhost:8123` to access the web interface.**
 
 ## Usage
 
