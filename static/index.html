@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Location History Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem 4rem;
+        }
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+        #last_updated {
+            margin-bottom: 1rem;
+            color: #666;
+            text-align: right;
+        }
+        #auth_url {
+            margin-bottom: 1rem;
+            color: #666;
+        }
+        #auth-form {
+            margin: 1rem 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            outline: none;
+            color: #fff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 9px #999;
+        }
+        .button:hover {background-color: #3e8e41}
+        .button:active {
+            background-color: #3e8e41;
+            box-shadow: 0 5px #666;
+            transform: translateY(4px);
+        }
+        @media screen and (max-width: 600px) {
+            body {
+                margin: 1rem;
+            }
+            #map {
+                height: 400px;
+            }
+            
+        }
+    </style>
+</head>
+<body>
+    <h1>Golf GTI - Location History</h1>
+    <p id="auth_url"></p>
+    <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
+    <form id="auth-form">
+        <label for="auth_code" style="display: none;">Enter Authorization Code:</label>
+        <input type="text" id="auth_code" name="auth_code" placeholder="Authorization Code" required>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="map"></div>
+    <p id="last_updated"></p>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([0, 0], 2); // Default view, will be updated with the newest location
+
+        // Add a tile layer to the map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var markers = [];
+
+        // Function to fetch and update location data
+        function updateLocationData() {
+            fetch('/location.json')
+                .then(response => response.json())
+                .then(data => {
+                    // Remove existing markers
+                    markers.forEach(marker => map.removeLayer(marker));
+                    markers = [];
+
+                    // Add new markers and focus on the newest location
+                    let newestLocation = data[data.length - 1];
+                    data.forEach(location => {
+                        const lastUpdated = new Date(location.data_age).toLocaleString();
+                        document.getElementById('last_updated').textContent = `Last updated: ${lastUpdated}`;
+                        var marker = L.marker([location.latitude, location.longitude])
+                            .addTo(map)
+                            .bindPopup(`Latitude: ${location.latitude}<br>Longitude: ${location.longitude}<br>Data Age: ${lastUpdated}`);
+                        markers.push(marker);
+                    });
+
+                    // Focus the map on the newest location
+                    if (newestLocation) {
+                        map.setView([newestLocation.latitude, newestLocation.longitude], 13);
+                    }
+                })
+                .catch(error => console.error('Error fetching location data:', error));
+        }
+
+        // Initial load of location data
+        updateLocationData();
+
+        // Update location data every 15 minutes
+        setInterval(updateLocationData, 900000); // 900000 ms = 15 minutes
+
+        // Reload the page every 5 minutes to prevent the browser from caching the location data
+        setInterval(() => location.reload(), 300000); // 300000 ms = 5 minutes
+
+        // Fetch and display the auth_url
+        fetch('/auth_url')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('auth_url').innerHTML = `<a href="${data.auth_url}" target="_blank" class="button">Authenticate</a>`;
+            })
+            .catch(error => console.error('Error fetching auth_url:', error));
+
+        // Handle form submission
+        document.getElementById('auth-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var authCode = document.getElementById('auth_code').value;
+            fetch('/submit_auth_code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ auth_code: authCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Authorization code submitted successfully.');
+                } else {
+                    alert('Failed to submit authorization code.');
+                }
+            })
+            .catch(error => console.error('Error submitting authorization code:', error));
+        });
+    </script>
+</body>
+</html>

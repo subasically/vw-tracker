@@ -3,10 +3,16 @@ import time
 import pickle
 from dateutil import parser
 import urllib.request
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
-client = smartcar.AuthClient('your-client-id-here','your-client-secret-here','http://localhost/smartcar/redirect/','live')
+client_id = os.getenv('CLIENT_ID')
+client_secret = os.getenv('CLIENT_SECRET')
 
+client = smartcar.AuthClient(client_id, client_secret, 'http://localhost/smartcar/redirect/', 'live')
 
 # Alter this list to specify the scope of permissions your application is requesting access to
 scopes = ['read_vehicle_info', 'read_battery','read_charge']

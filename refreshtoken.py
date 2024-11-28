@@ -5,12 +5,19 @@
 import smartcar
 import time
 import pickle
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
-client = smartcar.AuthClient('your-client-id-here','your-client-secret-here','http://localhost/smartcar/redirect/','live')
+client_id = os.getenv('CLIENT_ID')
+client_secret = os.getenv('CLIENT_SECRET')
+
+client = smartcar.AuthClient(client_id, client_secret, 'http://localhost/smartcar/redirect/', 'live')
 
 # Alter this list to specify the scope of permissions your application is requesting access to
-scopes = ['read_vehicle_info', 'read_battery','read_charge']
+scopes = ['read_vehicle_info']
 
 # Access(access_token='eccf54e6-a2b3-492f-877a-856189b6720c',
 # token_type='Bearer', expires_in=7200,#
@@ -29,4 +36,6 @@ print(new_access)
 file = open('tokens.txt', 'wb')
 pickle.dump(new_access, file)
 file.close()
+
+time.sleep(int(os.getenv('REFRESH_TOKEN_INTERVAL', 3600)))  # Pause for 60 minutes
 
