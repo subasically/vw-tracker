@@ -13,7 +13,6 @@ load_dotenv()
 client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
 port = int(os.getenv('PORT', 8123))  # Default to 8123 if PORT is not set
-host = os.getenv('HOST', 'localhost') # Default to localhost if HOST is not set
 scopes = os.getenv('SCOPES', 'read_vehicle_info,read_location,read_odometer').split(',')
 
 client = smartcar.AuthClient(client_id, client_secret, 'http://localhost/smartcar/redirect/', 'live')
@@ -30,6 +29,11 @@ def location_json():
 def get_auth_url():
     auth_url = client.get_auth_url(scopes).replace('mode=test', 'mode=live')
     return jsonify({'auth_url': auth_url})
+
+@app.route('/vehicle_name', methods=['GET'])
+def get_vehicle_name():
+    vehicle_name = os.getenv('VEHICLE_NAME', 'Vehicle')
+    return jsonify({'vehicle_name': vehicle_name})
 
 @app.route('/submit_auth_code', methods=['POST'])
 def submit_auth_code():

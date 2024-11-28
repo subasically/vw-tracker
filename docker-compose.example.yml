@@ -11,6 +11,7 @@ services:
       - UPDATE_INTERVAL=${UPDATE_INTERVAL}
       - PAUSE_INTERVAL=${PAUSE_INTERVAL}
       - REFRESH_TOKEN_INTERVAL=${REFRESH_TOKEN_INTERVAL}
+      - VEHICLE_NAME=My Car
     volumes:
       - ./static:/app/static
     command: ["python", "app.py"]

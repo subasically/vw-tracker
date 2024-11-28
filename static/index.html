@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Location History Map</title>
+    <title>VW Tracker</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -38,7 +38,6 @@
             background-color: #4CAF50;
             border: none;
             border-radius: 15px;
-            box-shadow: 0 9px #999;
         }
         .button:hover {background-color: #3e8e41}
         .button:active {
@@ -57,7 +56,7 @@
     </style>
 </head>
 <body>
-    <h1>Golf GTI - Location History</h1>
+    <h1 id="vehicle_name">Vehicle - Location History</h1>
     <p id="auth_url"></p>
     <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
     <form id="auth-form">
@@ -69,6 +68,14 @@
     <p id="last_updated"></p>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        // Fetch and display the vehicle name
+        fetch('/vehicle_name')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('vehicle_name').textContent = `${data.vehicle_name} - Location History`;
+            })
+            .catch(error => console.error('Error fetching vehicle name:', error));
+
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2); // Default view, will be updated with the newest location
         // Add a tile layer to the map
