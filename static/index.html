@@ -75,7 +75,6 @@
                 document.getElementById('vehicle_name').textContent = `${data.vehicle_name} - Location History`;
             })
             .catch(error => console.error('Error fetching vehicle name:', error));
-
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2); // Default view, will be updated with the newest location
         // Add a tile layer to the map
