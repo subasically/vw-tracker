@@ -7,6 +7,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
+# Ensure the static folder is included
+COPY static /app/static
 # Expose the port for the HTTP server
 EXPOSE 8123
 # Run the Flask web server
