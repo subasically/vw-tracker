@@ -2,6 +2,7 @@ services:
   vw-tracker:
     build: .
     container_name: vw-tracker
+    platform: linux/amd64  # Specify the platform
     ports:
       - "8123:8123"
     env_file:
