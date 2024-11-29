@@ -26,7 +26,7 @@ if not client_id or not client_secret or not redirect_uri:
     raise ValueError("CLIENT_ID, CLIENT_SECRET, and SMARTCAR_REDIRECT_URI must be set in the environment variables.")
 
 port = int(os.getenv('PORT', 8123))  # Default to 8123 if PORT is not set
-scopes = os.getenv('SCOPES', 'read_vehicle_info,read_location,read_odometer').split(',')
+PERMISSIONS = os.getenv('PERMISSIONS', 'read_vehicle_info,read_location,read_odometer').split(',')
 
 client = smartcar.AuthClient(client_id, client_secret, redirect_uri, 'live')
 
@@ -34,9 +34,23 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Ensure data.json exists
 def ensure_data_json_exists():
+    home_lat = os.getenv('HOME_LAT')
+    home_lon = os.getenv('HOME_LON')
+    app.logger.debug(f"Home location: {home_lat}, {home_lon}")
+    home_location = {'latitude': float(home_lat), 'longitude': float(home_lon)} if home_lat and home_lon else {}
+    
     if not os.path.exists('static/data.json'):
         with open('static/data.json', 'w') as file:
-            json.dump({'last_refresh_time': None, 'locations': []}, file)
+            json.dump({'last_refresh_time': None, 'home_location': home_location, 'locations': []}, file)
+        app.logger.debug("data.json created with home location.")
+    else:
+        with open('static/data.json', 'r+') as file:
+            data = json.load(file)
+            data['home_location'] = home_location
+            file.seek(0)
+            json.dump(data, file, indent=4)
+            file.truncate()
+        app.logger.debug("Home location added to existing data.json.")
 
 ensure_data_json_exists()
 
@@ -116,7 +130,7 @@ def data_json():
 
 @app.route('/auth_url', methods=['GET'])
 def get_auth_url():
-    auth_url = client.get_auth_url(scopes).replace('mode=test', 'mode=live')
+    auth_url = client.get_auth_url(PERMISSIONS).replace('mode=test', 'mode=live')
     return jsonify({'auth_url': auth_url})
 
 @app.route('/vehicle_name', methods=['GET'])
@@ -195,6 +209,9 @@ def update_vehicle_location():
 
     previous_location = None
 
+    home_lat = float(os.getenv('HOME_LAT', 'nan'))
+    home_lon = float(os.getenv('HOME_LON', 'nan'))
+
     while True:
         current_time = time.time()
         
@@ -231,12 +248,18 @@ def update_vehicle_location():
 
         if not duplicate_found:
             print(f"[{chicago_time}] Location has changed or first run, adding new location...")
+            # Calculate distance from home
+            if not (isnan(home_lat) or isnan(home_lon)):
+                distance_from_home = calculate_distance(home_lat, home_lon, vehicle_location.latitude, vehicle_location.longitude)
+            else:
+                distance_from_home = None
             # Append new location data
             location_data.append({
                 'latitude': vehicle_location.latitude,
                 'longitude': vehicle_location.longitude,
                 'data_age': data_age_human_friendly,
-                'request_id': vehicle_location.meta.request_id
+                'request_id': vehicle_location.meta.request_id,
+                'distance_from_home': distance_from_home
             })
 
         # Write updated data back to the data json file
@@ -254,6 +277,15 @@ def update_vehicle_location():
             'latitude': vehicle_location.latitude,
             'longitude': vehicle_location.longitude
         }
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    from math import radians, sin, cos, sqrt, atan2
+    R = 3958.8  # Radius of the Earth in miles
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) * sin(dlat / 2) + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) * sin(dlon / 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c  # Distance in miles
 
 # Schedule token refresh every 60 minutes
 def schedule_token_refresh():

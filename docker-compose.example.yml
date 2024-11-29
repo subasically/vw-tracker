@@ -8,8 +8,11 @@ services:
       CLIENT_ID: "YOUR-CLIENT-ID"
       CLIENT_SECRET: "YOUR-CLIENT-SECRET"
       SMARTCAR_REDIRECT_URI: "http://localhost/smartcar/redirect/"
+      PERMISSIONS: "read_vehicle_info,read_location,read_odometer"
       UPDATE_INTERVAL: "900"
       PAUSE_INTERVAL: "1800"
       REFRESH_TOKEN_INTERVAL: "3600"
       VEHICLE_NAME: "My Car"
+      HOME_LAT: "37.7749" # Update with your home location
+      HOME_LON: "-122.4194" # Update with your home location
     command: ["python", "app.py"]

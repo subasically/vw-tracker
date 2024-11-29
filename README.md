@@ -24,6 +24,7 @@ Simple scripts for getting car status from Smartcar.com. This project uses Flask
    REFRESH_TOKEN_INTERVAL=3600
    CLIENT_ID=your_client_id
    CLIENT_SECRET=your_client_secret
+   PERMISSIONS=Get permissions from here: https://smartcar.com/docs/api-reference/permissions and add them
    ```
 
 3. **Build and run the Docker container:**:

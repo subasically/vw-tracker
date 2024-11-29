@@ -1,5 +1,15 @@
 {
-    "last_refresh_time": "",
+    "last_refresh_time": "2024-11-29T11:45:01.830688",
+    "home_location": {
+        "latitude": 41.704400178971106,
+        "longitude": -93.780863765763
+    },
     "locations": [
+        {
+            "latitude": 40.097493,
+            "longitude": -75.002535,
+            "data_age": "2024-11-29T17:45:01.034Z",
+            "request_id": "3883c32f-de8d-4747-9b24-097b0d661a9b"
+        }
     ]
 }
