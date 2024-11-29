@@ -1,10 +1,11 @@
 services:
   vw-tracker:
     build: .
+    container_name: vw-tracker
     ports:
       - "8123:8123"
     env_file:
-      - .env
+      - .env.local
     volumes:
       - ./static:/app/static
     command: ["python", "app.py"]

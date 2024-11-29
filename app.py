@@ -16,8 +16,8 @@ client_id = os.getenv('CLIENT_ID')
 client_secret = os.getenv('CLIENT_SECRET')
 redirect_uri = os.getenv('SMARTCAR_REDIRECT_URI')
 
-if not client_id or not client_secret:
-    raise ValueError("CLIENT_ID and CLIENT_SECRET must be set in the environment variables.")
+if not client_id or not client_secret or not redirect_uri:
+    raise ValueError("CLIENT_ID, CLIENT_SECRET, and SMARTCAR_REDIRECT_URI must be set in the environment variables.")
 
 port = int(os.getenv('PORT', 8123))  # Default to 8123 if PORT is not set
 scopes = os.getenv('SCOPES', 'read_vehicle_info,read_location,read_odometer').split(',')

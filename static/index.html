@@ -53,10 +53,20 @@
                 height: 400px;
             }
         }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <h1 id="vehicle_name">Vehicle - Location History</h1>
+    <p id="success_message"></p>
+    <p id="error_message"></p>
     <p id="auth_url"></p>
     <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
     <form id="auth-form">
@@ -120,6 +130,22 @@
                 document.getElementById('auth_url').innerHTML = `<a href="${data.auth_url}" target="_blank" class="button">Authenticate</a>`;
             })
             .catch(error => console.error('Error fetching auth_url:', error));
+        // Function to show messages
+        function showMessage(message, isSuccess) {
+            const successMessage = document.getElementById('success_message');
+            const errorMessage = document.getElementById('error_message');
+            if (isSuccess) {
+                successMessage.textContent = message;
+                successMessage.classList.add('success');
+                setTimeout(() => {
+                    successMessage.textContent = '';
+                    successMessage.classList.remove('success');
+                }, 3000);
+            } else {
+                errorMessage.textContent = message;
+                errorMessage.classList.add('error');
+            }
+        }
         // Handle form submission
         document.getElementById('auth-form').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -134,12 +160,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Authorization code submitted successfully.');
+                    showMessage('Authorization code submitted successfully.', true);
+                    updateLocationData(); // Refresh the map
                 } else {
-                    alert('Failed to submit authorization code.');
+                    showMessage('Failed to submit authorization code.', false);
                 }
             })
-            .catch(error => console.error('Error submitting authorization code:', error));
+            .catch(error => {
+                console.error('Error submitting authorization code:', error);
+                showMessage('Failed to submit authorization code.', false);
+            });
         });
     </script>
 </body>
