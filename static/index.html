@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>VW - Tracker</title>
     <meta charset="utf-8" />
@@ -10,22 +11,27 @@
             font-family: Arial, sans-serif;
             margin: 2rem 4rem;
         }
+
         #map {
             height: 600px;
             width: 100%;
         }
+
         #last_updated {
             margin-bottom: 1rem;
             color: #666;
             text-align: right;
         }
+
         #auth_url {
             margin-bottom: 1rem;
             color: #666;
         }
+
         #auth-form {
             margin: 1rem 0;
         }
+
         .button {
             display: inline-block;
             padding: 10px 20px;
@@ -38,44 +44,60 @@
             background-color: #4CAF50;
             border: none;
             border-radius: 15px;
+            margin: 1rem 0;
         }
-        .button:hover {background-color: #3e8e41}
+
+        .button:hover {
+            background-color: #3e8e41
+        }
+
         .button:active {
             background-color: #3e8e41;
             box-shadow: 0 5px #666;
             transform: translateY(4px);
         }
+
         @media screen and (max-width: 600px) {
             body {
                 margin: 1rem;
             }
+
             #map {
                 height: 400px;
             }
         }
+
         .success {
             color: green;
             font-weight: bold;
         }
+
         .error {
             color: red;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <h1 id="vehicle_name">Vehicle - Location History</h1>
     <p id="success_message"></p>
     <p id="error_message"></p>
-    <p id="auth_url"></p>
-    <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
-    <form id="auth-form">
-        <label for="auth_code">Enter Authorization Code:</label>
-        <input type="text" id="auth_code" name="auth_code" required>
-        <button type="submit">Submit</button>
-    </form>
+    <div id="auth_wrapper">
+        <p id="auth_url"></p>
+        <br>Enter the authorization code you received after authenticating. </br>1. Link/Select your car</br>2. Enter
+        your pin</br>3. Allow access. </br>Copy this code: "localhost/smartcar/redirect/?code=<b>COPY_THIS_CODE</b>"</p>
+        <form id="auth-form">
+            <label for="auth_code">Enter Authorization Code:</label>
+            <input type="text" id="auth_code" name="auth_code" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <button id="force_auth_button" class="button">Force Auth</button>
     <div id="map"></div>
     <p id="last_updated"></p>
+    <p id="last_refresh_time"></p>
+    <a href="#" id="refresh_token_link">Refresh Token</a>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Fetch and display the vehicle name
@@ -85,6 +107,24 @@
                 document.getElementById('vehicle_name').textContent = `${data.vehicle_name} - Location History`;
             })
             .catch(error => console.error('Error fetching vehicle name:', error));
+
+        // Check if tokens are valid
+        fetch('/check_tokens')
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    document.getElementById('auth_wrapper').style.display = 'none';
+                } else {
+                    document.getElementById('auth_wrapper').style.display = 'block';
+                }
+            })
+            .catch(error => console.error('Error checking tokens:', error));
+
+        // Show auth wrapper on force auth button click
+        document.getElementById('force_auth_button').addEventListener('click', function() {
+            document.getElementById('auth_wrapper').style.display = 'block';
+        });
+
         // Initialize the map
         var map = L.map('map').setView([0, 0], 2); // Default view, will be updated with the newest location
         // Add a tile layer to the map
@@ -94,14 +134,14 @@
         var markers = [];
         // Function to fetch and update location data
         function updateLocationData() {
-            fetch('location.json')
+            fetch('data.json')
                 .then(response => response.json())
                 .then(data => {
                     // Remove existing markers
                     markers.forEach(marker => map.removeLayer(marker));
                     markers = [];
                     // Add new markers
-                    data.forEach(location => {
+                    data.locations.forEach(location => {
                         const lastUpdated = new Date(location.data_age).toLocaleString();
                         document.getElementById('last_updated').textContent = `Last updated: ${lastUpdated}`;
                         var marker = L.marker([location.latitude, location.longitude])
@@ -110,17 +150,31 @@
                         markers.push(marker);
                     });
                     // Focus the map on the newest location
-                    if (data.length > 0) {
-                        let newestLocation = data[data.length - 1];
+                    if (data.locations.length > 0) {
+                        let newestLocation = data.locations[data.locations.length - 1];
                         map.setView([newestLocation.latitude, newestLocation.longitude], 13);
                     }
                 })
                 .catch(error => console.error('Error fetching location data:', error));
         }
-        // Initial load of location data
+        // Function to fetch and display the last refresh time
+        function updateLastRefreshTime() {
+            fetch('data.json')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.last_refresh_time) {
+                        document.getElementById('last_refresh_time').textContent = `Last refresh token update: ${new Date(data.last_refresh_time).toLocaleString()}`;
+                    }
+                })
+                .catch(error => console.error('Error fetching last refresh time:', error));
+        }
+        // Initial load of location data and last refresh time
         updateLocationData();
+        updateLastRefreshTime();
         // Update location data every 15 minutes
         setInterval(updateLocationData, 900000); // 900000 ms = 15 minutes
+        // Update last refresh time every 15 minutes
+        setInterval(updateLastRefreshTime, 900000); // 900000 ms = 15 minutes
         // Reload the page every 5 minutes to prevent the browser from caching the location data
         setInterval(() => location.reload(), 300000); // 300000 ms = 5 minutes
         // Fetch and display the auth_url
@@ -147,7 +201,7 @@
             }
         }
         // Handle form submission
-        document.getElementById('auth-form').addEventListener('submit', function(event) {
+        document.getElementById('auth-form').addEventListener('submit', function (event) {
             event.preventDefault();
             var authCode = document.getElementById('auth_code').value;
             fetch('/submit_auth_code', {
@@ -157,20 +211,41 @@
                 },
                 body: JSON.stringify({ auth_code: authCode })
             })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showMessage('Authorization code submitted successfully.', true);
+                        updateLocationData(); // Refresh the map
+                    } else {
+                        showMessage('Failed to submit authorization code.', false);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting authorization code:', error);
+                    showMessage('Failed to submit authorization code.', false);
+                });
+        });
+        // Function to manually refresh the token
+        document.getElementById('refresh_token_link').addEventListener('click', function(event) {
+            event.preventDefault();
+            fetch('/refresh_token', {
+                method: 'POST'
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showMessage('Authorization code submitted successfully.', true);
-                    updateLocationData(); // Refresh the map
+                    showMessage('Token refreshed successfully.', true);
+                    updateLastRefreshTime(); // Update the last refresh time display
                 } else {
-                    showMessage('Failed to submit authorization code.', false);
+                    showMessage('Failed to refresh token.', false);
                 }
             })
             .catch(error => {
-                console.error('Error submitting authorization code:', error);
-                showMessage('Failed to submit authorization code.', false);
+                console.error('Error refreshing token:', error);
+                showMessage('Failed to refresh token.', false);
             });
         });
     </script>
 </body>
+
 </html>
