@@ -1,2 +1,2 @@
 .env.local
-location.json
+__pycache__

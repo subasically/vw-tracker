@@ -26,6 +26,16 @@ client = smartcar.AuthClient(client_id, client_secret, redirect_uri, 'live')
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Ensure location.json exists
+if not os.path.exists('static/location.json'):
+    with open('static/location.json', 'w') as file:
+        file.write('[]')
+
+# Ensure tokens.txt exists
+if not os.path.exists('tokens.txt'):
+    with open('tokens.txt', 'wb') as file:
+        pickle.dump({}, file)
+
 @app.route('/')
 def index():
     app.logger.debug('Serving index.html')
