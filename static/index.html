@@ -84,14 +84,13 @@
         var markers = [];
         // Function to fetch and update location data
         function updateLocationData() {
-            fetch('/location.json')
+            fetch('location.json')
                 .then(response => response.json())
                 .then(data => {
                     // Remove existing markers
                     markers.forEach(marker => map.removeLayer(marker));
                     markers = [];
-                    // Add new markers and focus on the newest location
-                    let newestLocation = data[data.length - 1];
+                    // Add new markers
                     data.forEach(location => {
                         const lastUpdated = new Date(location.data_age).toLocaleString();
                         document.getElementById('last_updated').textContent = `Last updated: ${lastUpdated}`;
@@ -101,7 +100,8 @@
                         markers.push(marker);
                     });
                     // Focus the map on the newest location
-                    if (newestLocation) {
+                    if (data.length > 0) {
+                        let newestLocation = data[data.length - 1];
                         map.setView([newestLocation.latitude, newestLocation.longitude], 13);
                     }
                 })
