@@ -5,6 +5,7 @@ import logging
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 import smartcar
+from version import __version__
 
 app = Flask(__name__, static_folder='static')
 
@@ -60,6 +61,10 @@ def submit_auth_code():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/version', methods=['GET'])
+def get_version():
+    return jsonify({'version': __version__})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port)
